@@ -1,35 +1,56 @@
-import React, { Component } from 'react';
-import Todos from './components/Todos';
+import React, { useState, useRef, useEffect }from 'react';
+import TodoList from './components/TodosList';
+import { nanoid } from 'nanoid';
 import './App.css'
-class App extends Component {
-  state = {
-    todos: [
-      {
-        id: 1,
-        title: 'take out the trash',
-        completed: false
-      },
-      {
-        id: 2,
-        title: 'dinner with kids',
-        completed: false
-      },
-      {
-        id: 3,
-        title: 'Meeting with boss',
-        completed: false
-      }
-    ]
+const LOCAL_STORAGE_KEY = 'todoApp.todos'
+function App() {
+  const key = nanoid()
+  const [todos, setTodos] = useState([])
+  const todoNameRef = useRef()
+
+  useEffect(()=>{
+    const storedTodos = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY))
+    if (storedTodos)setTodos(storedTodos)
+  }, [])
+
+  useEffect(()=>{
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(todos))
+  }, [todos])
+  
+  function toggleTodo(id) {
+    const newTodos = [...todos]
+    const todo = newTodos.find(todo => todo.id === id)
+    todo.complete = !todo.complete
+    setTodos(newTodos)
   }
-  render() {
-    console.log(this.state.todos)
-    return (
-      <div className="App">
-      <Todos todos={this.state.todos} />
-       
-      </div>
-    );
+
+  function handleClearTodos() {
+    const newTodos = todos.filter(todo => !todo.complete)
+    setTodos(newTodos)
   }
+
+  function handleAddTodo(e) {
+    const name = todoNameRef.current.value
+    if(name === '') return
+    console.log(name)
+    setTodos(prevTodos => {
+      return [...prevTodos, {id: key, name:name, complete: false}]
+      
+    })
+    console.log(todos.id)
+    // set value to empty the input box
+
+    todoNameRef.current.value = null
+  }
+  return(
+    <>
+      <TodoList index= {todos.id} todos = {todos} toggleTodo={toggleTodo}/>
+      <input ref={todoNameRef} type="text" />
+      <button onClick={handleAddTodo}>Add Todo</button>
+      <button onClick={handleClearTodos}>Clear Complete</button>
+      <div>{todos.filter(todo=> !todo.complete).length} left to do</div>
+    </>
+  )
 }
 
 export default App;
